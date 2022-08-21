@@ -10,6 +10,9 @@
 
 class sjf_multitoggle : public juce::Component
 {
+    //==============================================================================
+    //==============================================================================
+    //==============================================================================
     class sjf_multitoggle_LookAndFeel : public juce::LookAndFeel_V4
     {
         void drawToggleButton (juce::Graphics& g, juce::ToggleButton& button,
@@ -32,7 +35,7 @@ class sjf_multitoggle : public juce::Component
                 g.setOpacity (0.5f);
             g.drawFittedText(button.getButtonText(), button.getLocalBounds(), juce::Justification::centred, 10);
         };
-        
+        //==============================================================================
         void drawTickBox (juce::Graphics& g, juce::Component& component,
                           float x, float y, float w, float h,
                           const bool ticked,
@@ -54,6 +57,9 @@ class sjf_multitoggle : public juce::Component
             }
         };
     };
+    //==============================================================================
+    //==============================================================================
+    //==============================================================================
 public:
     //==============================================================================
     sjf_multitoggle()
@@ -200,7 +206,6 @@ public:
         return temp;
     }
     //==============================================================================
-    
     int getNumButtons()
     {
         return buttons.size();
@@ -229,7 +234,8 @@ public:
         tickDisabledColourId = 0x1006503
     };
 private:
-    int calulateMousePosToSliderCal(const juce::MouseEvent& e)
+    //==============================================================================
+    int calulateMousePosToToggleNumber(const juce::MouseEvent& e)
     {
         auto pos = e.position;
         auto x = pos.getX();
@@ -241,7 +247,6 @@ private:
         {
             for (int c = 0; c < nColumns; c++)
             {
-                
                 if( y >= r*bHeight && y < (r+1)*bHeight && x >= c*bWidth && x < (c+1)*bWidth )
                 {
                     auto b = c + r*nColumns;
@@ -251,6 +256,7 @@ private:
         }
         return -1;
     }
+    //==============================================================================
     void mouseDown (const juce::MouseEvent& e) override
     {
         if( e.mods.isAltDown() )
@@ -271,7 +277,7 @@ private:
         }
         else
         {
-            auto b = calulateMousePosToSliderCal(e);
+            auto b = calulateMousePosToToggleNumber(e);
             if (b < 0) { return; }
             buttons[b]->setToggleState(! buttons[b]->getToggleState(), juce::dontSendNotification );
             lastMouseDownToggleState = buttons[b]->getToggleState();
@@ -280,11 +286,10 @@ private:
     //==============================================================================
     void mouseDrag(const juce::MouseEvent& e) override
     {
-        auto b = calulateMousePosToSliderCal(e);
+        auto b = calulateMousePosToToggleNumber(e);
         if (b < 0) { return; }
         buttons[b]->setToggleState( lastMouseDownToggleState, juce::dontSendNotification );
     }
-    //==============================================================================
     //==============================================================================
     void createButtonArray(int numRows, int numColumns)
     {
@@ -302,8 +307,6 @@ private:
         }
     }
     //==============================================================================
-    
-    
 private:
     sjf_multitoggle_LookAndFeel thisLookAndFeel;
     

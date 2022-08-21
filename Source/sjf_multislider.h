@@ -107,86 +107,136 @@ public:
         {
             isHorizontalFlag = horizontal;
             resized();
-        }
-        
+        }  
     }
+    //==============================================================================
     enum ColourIds
     {
         backgroundColourId          = 0x1001200,
-        outlineColourId        = 0x1000c00,
-        sliderColourID               = 0x1001310,
+        outlineColourId             = 0x1000c00,
+        sliderColourID              = 0x1001310,
     };
+    //==============================================================================
 private:
-    void calulateMousePosToSliderCal(const juce::MouseEvent& e)
+    void calulateMousePosToSliderVal( const juce::MouseEvent& e )
     {
-        
-        auto nSliders = sliders.size();
-        auto pos = e.position;
+        auto theTouchedSlider = findTouchedSlider( e );
+        auto val = calculatedSliderValue( e );
+        if (e.mods.isShiftDown() && e.mods.isAltDown())
+        {
+            mouseActionAndAltAndShiftLogic(  val,  theTouchedSlider );
+        }
+        else if( e.mods.isShiftDown() )
+        {
+            mouseActionAndShiftLogic( val );
+        }
+        else if( e.mods.isAltDown() )
+        {
+            mouseActionAndAltLogic( val, theTouchedSlider );
+        }
+        else
+        {
+            sliders[theTouchedSlider]->setValue(val);
+        }
+    }
+    //==============================================================================
+    int findTouchedSlider( const juce::MouseEvent& e )
+    {
+        float nSliders = sliders.size();
+        auto x = e.position.getX();
+        auto y = e.position.getY();
+        int theTouchedSlider;
         if (!isHorizontalFlag)
         {
-            auto x = pos.getX();
-            auto y = pos.getY();
-            auto val = ((float)getHeight()-y)/(float)getHeight();
-            auto sWidth = getWidth()/nSliders;
-            for (int s = 0; s < nSliders; s++)
+            if (x < 0) { theTouchedSlider = 0; }
+            else if ( x >= getWidth() ) { theTouchedSlider = nSliders - 1; }
+            else
             {
-                if( e.mods.isShiftDown() )
+                auto sWidth = getWidth()/nSliders;
+                for (int s = 0; s < nSliders; s++)
                 {
-                    for (int s = 0; s < sliders.size(); s++)
-                    {
-                        sliders[s]->setValue( val );
-                    }
-                }
-                else if( e.mods.isAltDown() )
-                {
-                    for (int s = 0; s < sliders.size(); s++)
-                    {
-                        sliders[s]->setValue( sliders[s]->getMinimum() );
-                    }
-                }
-                else if( x >= s*sWidth && x < (s+1)*sWidth)
-                {
-                    sliders[s]->setValue(val);
+                    if( x >= s*sWidth && x < (s+1)*sWidth) { theTouchedSlider = s; }
                 }
             }
         }
         else
         {
-            auto x = pos.getX();
-            auto y = pos.getY();
-            auto val = x / (float)getWidth();
-            auto sHeight = getHeight()/nSliders;
-            for (int s = 0; s < nSliders; s++)
+            if (y < 0){ theTouchedSlider = 0; }
+            else if (y >= getHeight()){ theTouchedSlider = nSliders - 1; }
+            else
             {
-                if( e.mods.isShiftDown() )
+                auto sHeight = getHeight()/nSliders;
+                for (int s = 0; s < nSliders; s++)
                 {
-                    for (int s = 0; s < sliders.size(); s++)
-                    {
-                        sliders[s]->setValue( val );
-                    }
-                }
-                else if( e.mods.isAltDown() )
-                {
-                    for (int s = 0; s < sliders.size(); s++)
-                    {
-                        sliders[s]->setValue( sliders[s]->getMinimum() );
-                    }
-                }
-                else if( y >= s*sHeight && y < (s+1)*sHeight)
-                {
-                    sliders[s]->setValue(val);
+                    if( y >= s*sHeight && y < (s+1)*sHeight){ theTouchedSlider = s; }
                 }
             }
         }
+        return theTouchedSlider;
     }
+    //==============================================================================
+    float calculatedSliderValue( const juce::MouseEvent& e )
+    {
+        auto x = e.position.getX();
+        auto y = e.position.getY();
+        if (!isHorizontalFlag) { return ((float)getHeight()-y)/(float)getHeight(); }
+        else { return ( x / (float)getWidth() ) ; }
+    }
+    //==============================================================================
+    void mouseActionAndShiftLogic( float val )
+    {
+        for (int s = 0; s < sliders.size(); s++) { sliders[s]->setValue( val ); }
+    }
+    //==============================================================================
+    void mouseActionAndAltLogic( float val, int theTouchedSlider )
+    {
+        
+        for (int s = 0; s < sliders.size(); s++)
+        {
+            auto distance = abs(theTouchedSlider - s);
+            if (distance == 0){ sliders[s]->setValue( val ); }
+            else
+            {
+                auto range = val - sliders[s]->getMinimum();
+                auto min = sliders[s]->getMinimum();
+                /* auto newVal = range / pow(2, distance); */
+                distance += 1;
+                auto newVal = range * ( (sliders.size() - distance) / (float)sliders.size() );
+                newVal += min;
+                sliders[s]->setValue( newVal );
+            }
+        }
+    }
+    //==============================================================================
+    void mouseActionAndAltAndShiftLogic( float val, int theTouchedSlider )
+    {
+        
+        for (int s = 0; s < sliders.size(); s++)
+        {
+            auto distance = abs(theTouchedSlider - s);
+            if (distance == 0){ sliders[s]->setValue( val ); }
+            else
+            {
+                auto max = sliders[s]->getMaximum();
+                auto range = max - val;
+                
+                //                auto newVal = range / pow(2, distance);
+                distance += 1;
+                auto newVal = range * ( (sliders.size() - distance) / (float)sliders.size() );
+                newVal  = max - newVal;
+                sliders[s]->setValue( newVal );
+            }
+        }
+    }
+    //==============================================================================
     void mouseDown (const juce::MouseEvent& e) override
     {
-        calulateMousePosToSliderCal(e);
+        calulateMousePosToSliderVal(e);
     }
     //==============================================================================
     void mouseDrag(const juce::MouseEvent& e) override
     {
-        calulateMousePosToSliderCal(e);
+        calulateMousePosToSliderVal(e);
     }
     //==============================================================================
     void createSliderArray(int nSliders)
@@ -204,8 +254,6 @@ private:
         }
     }
     //==============================================================================
-    
-    
 private:
     juce::Array<juce::Slider*> sliders;
     bool isHorizontalFlag = false;
