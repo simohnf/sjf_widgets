@@ -1,7 +1,8 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "sjf_widgets.h"
+#include "/Users/simonfay/Programming_Stuff/sjf_audio/sjf_multislider.h"
+#include "/Users/simonfay/Programming_Stuff/sjf_audio/sjf_multitoggle.h"
 //==============================================================================
 /*
     This component lives inside our window, and this is where you should put all
